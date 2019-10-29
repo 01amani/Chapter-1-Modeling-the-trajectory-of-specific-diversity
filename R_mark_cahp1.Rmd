@@ -1,0 +1,1785 @@
+---
+title: "Restoring diversity of West African forests through secondary succession"
+author: "AMANI BHK, KASSI J, TRAORE K, N'GUESSAN AE, DERROIRE G, ELOGNE GM, TONESSIA CD, ZOBI IC & HERAULT B"
+date: "16 janvier 2019"
+output: 
+  html_document :
+    toc : true
+    toc_float : yes
+    toc_deph : 3
+---
+
+# Abstract
+
+
+# Introduction
+
+## Etat actuel du couvert forestier en Côte d'Ivoire/Afrique de l'ouest
+
+## Quelles sont les informations à notre possession sur l'étude de la diversité floristique et le taux de recuperation (modelisation) de la diversité floristique dans les forêts secondaires?
+
+## Quels sont les facteurs succeptibles qui pourraient contôler ce taux de recuperation?
+
+## Questions de recherche
+### Comment se presente le niveau de diversité floristique des forêts secondaires par rapport aux forêts anciennes?
+### A quel taux cette diversité se reconstitue-t-elle?
+### Quels sont les principaux facteurs qui influencent ce taux?
+
+
+# Materials & Methods
+## Site description
+## Sampling
+## Statistical analyses
+
+## Charging packages
+
+```{r setup, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+library(tidyverse)
+library(entropart)
+library(reshape2)
+library(knitr)
+library(vegan)
+library(PerformanceAnalytics)
+library(rstan)
+library(ggplot2)
+```
+
+## Charging datasets
+```{r, echo=TRUE}
+data.env <- read.csv2("data_env.csv")
+data.tree <- read.csv2("data_tree.csv")
+```
+
+
+
+# Crossing co-variables ## Not important for the article????
+
+##  Graphs & Correlations
+
+### With Age
+
+```{r, warning=FALSE, echo=FALSE}
+# l'âge en fonction du nombre de remanent
+data.env1 <- na.omit(data.env)
+par(mfrow=c(2,3))
+plot(data.env1$age, data.env1$nbr_remanent)
+#lines(smooth.spline(data.env1$age, data.env1$nbr_remanent),col="red",lwd=2) 
+
+# l'âge en fonction de la proximité
+plot(data.env1$age, data.env1$Proximiteforesti.re.)
+
+
+
+# l'âge en fonction de la densité forestière
+plot(data.env1$age, data.env1$Densiteforesti.re.)
+
+
+
+# l'âge en fonction de l'année de culture
+plot(data.env1$age, data.env1$Annedeculture)
+
+
+
+# l'âge en fonction de l'aire basale
+plot(data.env1$age, data.env1$BA)
+
+# Correlation
+cor(data.env1$age, data.env1$nbr_remanent, method = "spearman")
+# Correlation
+cor(data.env1$age, data.env1$Proximiteforesti.re., method = "spearman")
+# Correlation
+cor(data.env1$age, data.env1$Densiteforesti.re., method = "spearman")
+# Correlation
+cor(data.env1$age, data.env1$Annedeculture, method = "spearman")
+# Correlation
+cor(data.env1$age, data.env1$BA, method = "spearman")
+
+
+```
+
+### With Forest density
+
+```{r, warning=FALSE, echo=FALSE}
+
+par(mfrow=c(2,3))
+
+# La densité forestière en fonction de l'âge
+plot(data.env1$Densiteforesti.re., data.env1$age) 
+
+
+# La densité forestière en fonction du nombre de remanent
+plot(data.env1$Densiteforesti.re., data.env1$nbr_remanent) 
+
+
+# La densité forestière en fonction de la proximité
+plot(data.env1$Densiteforesti.re., data.env1$Proximiteforesti.re.) 
+
+
+# La densité forestière en fonction de l'altitude
+plot(data.env1$Densiteforesti.re., data.env1$Altitude) 
+
+
+# La densité forestière en fonction de l'année de culture
+plot(data.env1$Densiteforesti.re., data.env1$Annedeculture) 
+
+
+# La densité forestière en fonction de l'âge
+plot(data.env1$Densiteforesti.re., data.env1$BA) 
+
+# Correlation
+cor(data.env1$Densiteforesti.re., data.env1$BA, method = "spearman")
+# Correlation
+cor(data.env1$Densiteforesti.re., data.env1$Annedeculture, method = "spearman")
+# Correlation
+cor(data.env1$Densiteforesti.re., data.env1$Altitude, method = "spearman")
+# Correlation
+cor(data.env1$Densiteforesti.re., data.env1$Proximiteforesti.re., method = "spearman")
+# Correlation
+cor(data.env1$Densiteforesti.re., data.env1$nbr_remanent, method = "spearman")
+# Correlation
+cor(data.env1$Densiteforesti.re., data.env1$age, method = "spearman")
+
+```
+
+
+
+### With crop culture duration
+
+```{r,warning=FALSE, echo=FALSE}
+par(mfrow=c(2,3))
+
+# L'année de culture en fonction de l'âge
+plot(data.env1$Annedeculture, data.env1$age) 
+
+
+# L'année de culture en fonction du nombre de remanent
+plot(data.env1$Annedeculture, data.env1$nbr_remanent) 
+
+
+# L'année de culture en fonction de la proximité
+plot(data.env1$Annedeculture, data.env1$Proximiteforesti.re.) 
+
+
+
+# L'année de culture en fonction de la densité forestière
+plot(data.env1$Annedeculture, data.env1$Densiteforesti.re.) 
+
+
+# L'année de culture en fonction de l'aire basale
+plot(data.env1$Annedeculture, data.env1$BA) 
+
+# Correlation
+cor(data.env1$Annedeculture, data.env1$BA, method = "spearman")
+# Correlation
+cor(data.env1$Annedeculture, data.env1$Densiteforesti.re., method = "spearman")
+# Correlation
+cor(data.env1$Annedeculture, data.env1$Proximiteforesti.re., method = "spearman")
+# Correlation
+cor(data.env1$Annedeculture, data.env1$nbr_remanent, method = "spearman")
+# Correlation
+cor(data.env1$Annedeculture, data.env1$age, method = "spearman")
+
+```
+
+
+
+### With Basal Area
+
+```{r, warning=FALSE, echo=FALSE}
+par(mfrow=c(2,3))
+
+# L'aire basale en fonction de l'âge
+plot(data.env1$BA, data.env1$age) # idem dans l'autre sens
+
+
+# L'aire basale en fonction du nombre de remanent
+plot(data.env1$BA, data.env1$nbr_remanent) 
+
+
+# L'aire basale en fonction de la proximité
+plot(data.env1$BA, data.env1$Proximiteforesti.re.) 
+
+
+# L'aire basale en fonction de la desnsité forestière
+plot(data.env1$BA, data.env1$Densiteforesti.re.) 
+
+
+# L'aire basale en fonction de l'altitude
+plot(data.env1$BA, data.env1$Altitude) 
+
+
+# L'aire basale en fonction de l'année de culture
+plot(data.env1$BA, data.env1$Annedeculture) 
+
+# Correlation
+cor(data.env1$BA, data.env1$Annedeculture, method = "spearman")
+# Correlation
+cor(data.env1$BA, data.env1$Densiteforesti.re., method = "spearman")
+# Correlation
+cor(data.env1$BA, data.env1$Proximiteforesti.re., method = "spearman")
+# Correlation
+cor(data.env1$BA, data.env1$nbr_remanent, method = "spearman")
+# Correlation
+cor(data.env1$BA, data.env1$age, method = "spearman")
+# Correlation
+cor(data.env1$BA, data.env1$Altitude, method = "spearman")
+
+
+```
+
+
+
+### With altitude
+
+```{r,warning=FALSE, echo=FALSE}
+par(mfrow=c(2,3))
+# L'altitude en fonction de l'année de culture
+plot(data.env1$Altitude, data.env1$age) 
+
+
+
+# L'altitude en fonction de l'année du nombre de remanent
+plot(data.env1$Altitude, data.env1$nbr_remanent) 
+
+
+# L'altitude en fonction de la proximité
+plot(data.env1$Altitude, data.env1$Proximiteforesti.re.) 
+
+
+
+# L'altitude en fonction de l'année de la densité forestière
+plot(data.env1$Altitude, data.env1$Densiteforesti.re.) 
+
+
+# L'altitude en fonction de l'année de l'aire basale
+plot(data.env1$Altitude, data.env1$BA) 
+
+# Correlation
+cor(data.env1$Altitude, data.env1$BA, method = "spearman")
+# Correlation
+cor(data.env1$Altitude, data.env1$Densiteforesti.re., method = "spearman")
+# Correlation
+cor(data.env1$Altitude, data.env1$age, method = "spearman")
+# Correlation
+cor(data.env1$Altitude, data.env1$Proximiteforesti.re., method = "spearman")
+# Correlation
+cor(data.env1$Altitude, data.env1$nbr_remanent, method = "spearman")
+```
+
+## Synthesis
+
+```{r synthesis,warning=FALSE, echo=FALSE}
+chart.Correlation(data.env1[c("age", "nbr_remanent", "Proximiteforesti.re.", "Densiteforesti.re.", "Altitude", "Annedeculture")])
+```
+
+Les differents niveau de correlation peuvent nous aider dans la comprehension et l'interpertation.
+
+**Suggestion**: 
+- Echantillonner plus de parcelles avec un nombre de remanent >= à 15 arbre et âgé de plus de 10 ans.
+- Echantillonner plus de parcelles âgées >= à 20 ans et situées à plus de 200m à proximité d'une ancienne forêt.
+- Echantillonner plus de parcelles ayant abritée plus de 10 années de culture et de remanent > à 5.
+- Echantillonner plus de parcelles de 10 remanents et de densité forestières > à 3.
+- Echantillonner plus de parcelles ayant un nombre de remanent > à 5 et une aire basale superieure à 10 m2.
+- Echantillonner plus de parcelles à une proximité >= 200m et ayant une aire basale superieure à 10 m2.
+- Echantillonner plus de parcelles ayant abritée plus de 10 années de culture
+
+
+# Data manupilation
+
+
+## Diversity Analysis
+
+```{r speciesID, warning=TRUE, echo=FALSE}
+data.tree$speciesID <-paste(data.tree$genusCorr, data.tree$speciesCorr)
+Ttree <- data.tree %>%
+  group_by(plot,speciesID) %>%
+  summarise(N=n())
+Ttree <- rename(Ttree, nub_sp=N)
+rmarkdown::paged_table(Ttree)
+```
+
+
+### Coverage of plot
+
+Le taux de couverture est la somme des probabilités des espèces observées étant donné **l’effort d’échantillonnage**. Il peut être estimé précisément à partir des données d’inventaire [@MarconEric.Morneau2017].
+
+```{r Coverage caculation, warning=FALSE, echo=FALSE, include=FALSE}
+plots <- unique(data.tree$plot)
+coverages <- data.frame(plot = plots, coverage = NA)
+for(p in plots){
+  paste0("Coverage for plot ",p," is ", Coverage(Ns = Ttree[which(Ttree$plot == p), "nub_sp"] %>% pull)) %>% print
+  coverages[coverages$plot == p, "coverage"] <- Coverage(Ns = Ttree[which(Ttree$plot == p), "nub_sp"] %>% pull)
+}
+```
+
+```{r Coverage plot, warning=FALSE,echo=FALSE}
+ggplot(coverages, aes( x = coverage)) + geom_histogram() +
+geom_density(alpha=0.6)
+```
+
+
+La probabilité pour un individu de la communauté d'appartenir à une espèce de l'échantillon dans cette étude, est **C = 95%** en moyenne.
+Le minimum et le maximum sont estimés à 77% et 99% respectivement.
+
+
+### Calculate HCDT entropy and number of Hill
+
+Estimer la diversité d’une communauté ne revient pas à une mesure unique, mais à un ensemble de mesures combinant différemment les composantes de la diversité [@Mirabel2018].
+L’entropie HCDT permet d’unifier les indices classiques de diversité : son paramètre, appelé ordre, fixe l’importance donnée aux espèces rares. L’entropie d’ordre 0 est la richesse ; celle d’ordre 1, l’indice de Shannon ; celle d’ordre 2, celui de Simpson. L’entropie va de pair avec la diversité au sens strict (Nombres de Hill) : le nombre d’espèces équiprobables dont l’entropie est la même que celle de la communauté réelle. Les profils de diversité représentent la diversité en fonction de son ordre et permettent la comparaison de communautés.
+
+```{r Entropie and diversity, warning=FALSE,echo=FALSE}
+# Create result table with the right format for the number of species------
+Tresult <- data.frame(plot = sort(unique(data.tree$plot), decreasing = FALSE),
+                     N = data.tree %>% arrange(plot) %>% group_by(plot) %>% summarise(N = n()) %>% pull,
+                     H0 = NA,
+                     H1 = NA,
+                     H2 = NA)
+
+plots <- sort(unique(data.tree$plot), decreasing = FALSE)
+
+for(p in plots){
+
+# isolate NS---------
+Ns_temp <- data.tree %>% 
+    filter(plot == p) %>% 
+    group_by(speciesID) %>% 
+    summarise(N = n()) %>% 
+    select(N) %>% 
+    pull %>% as.AbdVector()
+  
+# Calcule et replace--------
+  
+Tresult$H0[which(Tresult$plot == p)] <- Tsallis(Ns_temp, q=0)  # Richesse
+Tresult$H1[which(Tresult$plot == p)] <- Tsallis(Ns_temp, q=1)  # Shannon
+Tresult$H2[which(Tresult$plot == p)] <- Tsallis(Ns_temp, q=2)  # Simpson
+  
+}
+
+# Calculate number of Hill-----------
+
+Tresult <- mutate(Tresult, D0=expq(H0, q=0), D1=expq(H1, q=1), D2=expq(H2, q=2))
+rmarkdown::paged_table(Tresult)
+```
+
+
+
+La richesse specifique varie d'une communauté(parcelle) à une autre dans l'ensemble(7 à 143 espèces). Nous remarquons particulierement la proximité en nombre d'espèce de certaines communautés les unes des autres...(probablement pouvant former des groupes).
+Lorsqu'on associe l'abondance à la richesse (indice de Shannon), le nombre d'espèce evolue de 2 à 71 espèce. Lorqu'on accorde plus de poids aux espèces abondantes (indice de Simpson), le nombre d'espèce des communautés passe de 2 à 41 pour la communauté la plus riches.
+
+
+## Linking Entropy values to environmental variables
+
+```{r, warning=FALSE,echo=FALSE}
+data.env2 <- data.env %>% 
+  group_by(plot) %>% 
+  summarise(categorie, age, nbr_remanent, Proximiteforesti.re., Densiteforesti.re., Altitude, Annedeculture, Typedesol, Topographie, Precedentcultural, BA, AGB)
+
+Tresult1 <- merge(data.env2, Tresult, by="plot")
+
+rmarkdown::paged_table(Tresult1)
+```
+
+
+## Total species density per categorie
+
+```{r total species density per categorie, warning=TRUE, echo=FALSE}
+#TotalSp <- merge(Ttree, data.env2$categorie, all.x = TRUE, all.y = TRUE)
+#rmarkdown::paged_table(TotalSp
+TotalSp <- left_join(Ttree, data.env2)%>% select(plot,categorie, speciesID, nub_sp)
+rmarkdown::paged_table(TotalSp)
+```
+
+
+```{r Critere AIC D0, warning=FALSE,echo=FALSE}
+AICresult <- select(Tresult1, plot, categorie, age, nbr_remanent, Proximiteforesti.re., Densiteforesti.re., Altitude, Annedeculture, Typedesol, Topographie, Precedentcultural, D0)
+AICresult <- na.omit(AICresult)
+rmarkdown::paged_table(AICresult)
+```
+
+
+```{r total specie per categorie, warning=TRUE, echo=FALSE}
+
+Total_categories_abundances <- TotalSp %>% 
+  ungroup() %>% 
+  group_by(categorie, speciesID) %>% 
+  summarise(freq = sum(nub_sp))
+rmarkdown::paged_table(Total_categories_abundances)
+
+Total_category_sp_number <- Total_categories_abundances %>% 
+  ungroup %>% 
+  group_by(categorie) %>% 
+  summarise(N_sp=n())
+rmarkdown::paged_table(Total_category_sp_number)
+
+
+# Presence absence
+frequencies_matrix <- Total_categories_abundances %>% 
+  spread(categorie, freq)
+
+frequencies_matrix[is.na(frequencies_matrix)] <- 0
+
+presence_matrix <- frequencies_matrix
+presence_matrix[presence_matrix>0] <- 1
+rmarkdown::paged_table(presence_matrix )
+```
+
+
+```{r density of tree per categorie, warning=TRUE, echo=FALSE}
+TotalSp1 <- TotalSp%>%
+  group_by(categorie) %>% 
+  select(nub_sp)%>%
+  summarise(N=n())
+rmarkdown::paged_table(TotalSp1)
+```
+
+
+```{r, warning=FALSE,echo=FALSE}
+Divresult <- left_join(Tresult, data.env2)%>% select(plot,age,categorie, D0, D1)
+Divresult$age[is.na(Divresult$age)] <- 50
+rmarkdown::paged_table(Divresult)
+```
+
+
+```{r, warning=FALSE,echo=FALSE}
+ggplot(Divresult, aes(x=age, y=D0, colour=categorie)) + geom_point()+ scale_y_continuous(limits=c(0, 200)) # stat_smooth(method=loess)
+```
+
+
+### Time since abandonment
+
+
+```{r Diversity order 0, warning=FALSE,echo=FALSE}
+library(ggplot2)
+library(nycflights13)
+data5<-Tresult1[Tresult1$categorie == "foretanci ",]
+ggplot(Tresult1, aes(x=age, y=D0)) + geom_point() + stat_smooth(method=loess) +   scale_x_log10()+
+    geom_boxplot(data=data5, aes(x=200, y=D0), width=0.1)+
+    scale_y_continuous(limits=c(0, 200))
+```
+
+
+```{r Diversity order 1, warning=FALSE,echo=FALSE}
+data6<-Tresult1[Tresult1$categorie == "foretanci ",]
+ggplot(Tresult1, aes(x=age, y=D1)) + geom_point() + stat_smooth(method=loess) +   scale_x_log10()+
+    geom_boxplot(data=data6, aes(x=200, y=D1), width=0.1)
+```
+
+We model the effect of time sine abandonmet with the following equation:
+
+*Equation:*  
+
+
+We first simulate the equation to build the Stan inference code.
+
+```{r simulate dataset Richness, warning=FALSE,echo=FALSE}
+N <- 500
+time <- rep(1:100, 5)
+rsmax <- 100
+alpha0 <- 20
+lambda <- 0.025
+sd <- 0.1
+mean <- rsmax*(1-exp(-lambda*time))+alpha0
+rlsimul <- rlnorm(N, meanlog = log(mean), sdlog= sd)
+plot(log10(time), rlsimul)
+```
+
+Creation of the Stan model of specific richness (D0)
+
+```{r stan simulated data, warning=FALSE,echo=FALSE}
+library(rstan)
+model0 <- stan(file = "model1.stan",
+               data=list(N=N,age=time, D0=rlsimul),
+              pars=c("lambda", "alpha0", "Rsmax", "sigma"),
+           chains=3,
+           iter=1000,
+           warmup=500)
+
+traceplot(model0, pars=c("lambda", "alpha0", "Rsmax", "sigma"), nrow=2)
+plot(model0, pars=c("lambda", "alpha0", "Rsmax", "sigma"))
+save(model0, file = "model0.Rdata")
+```
+
+The model succeeded in retrieving the simulation parameters so that we move to real data.
+
+```{r stan real data of D0, warning=FALSE,echo=FALSE}
+Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
+Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ", ]
+model1 <- stan(file = "model1.stan",
+               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D0=Tresult1$D0),
+              pars=c("lambda", "alpha0", "Rsmax", "sigma"),
+           chains=3,
+           iter=2000,
+           warmup=1000)
+
+traceplot(model1, pars=c("lambda", "alpha0", "Rsmax", "sigma"), nrow=2)
+plot(model1, pars=c("lambda", "alpha0", "Rsmax", "sigma"))
+save(model1, file = "model1.Rdata")
+```
+
+```{r, stan real data of D0 PLOT, warning=FALSE,echo=FALSE}
+par<-extract(model1)
+age<-1:200
+med<-numeric()
+q05<-numeric()
+q95<-numeric()
+for (i in age){
+med<-c(med,median(
+  par$Rsmax*(1-exp(-par$lambda*i))+par$alpha0
+  ))
+q05<-c(q05,quantile(
+  par$Rsmax*(1-exp(-par$lambda*i))+par$alpha0
+  , probs=0.005))
+q95<-c(q95,quantile(
+ par$Rsmax*(1-exp(-par$lambda*i))+par$alpha0
+  , probs=0.995))
+}
+
+library(ggplot2)
+newdata <- data.frame(age=age, med=med, q05=q05,
+                    q95= q95)
+ggplot() +
+  geom_ribbon(data=newdata, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
+  geom_point(data=Tresult1, aes(x = age, y=D0))+
+  geom_line(data=newdata, aes(x=age, y=med))+
+  geom_boxplot(data=data5, aes(x=200, y=D0), width=0.1)+  
+  scale_x_log10()+ scale_y_continuous(limits=c(0, 200))+
+  labs(x="Age of Secondary Forest (yr)", y="Species Richness") + theme(legend.position=" none")
+```
+
+Creation of the Stan model of Shannon diversity (D1)
+
+```{r stan real data of D1, warning=FALSE,echo=FALSE}
+Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
+Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ", ]
+modeld1 <- stan(file = "modeld1.stan",
+               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D1=Tresult1$D1),
+              pars=c("lambda", "alpha0", "Rsmax", "sigma"),
+           chains=3,
+           iter=2000,
+           warmup=1000)
+
+traceplot(modeld1, pars=c("lambda", "alpha0", "Rsmax", "sigma"), nrow=2)
+plot(modeld1, pars=c("lambda", "alpha0", "Rsmax", "sigma"))
+save(modeld1, file = "modeld1.Rdata")
+```
+
+
+```{r stan real data of D1 PLOT, warning=FALSE,echo=FALSE}
+par1<-extract(modeld1)
+age<-1:200
+med<-numeric()
+q05<-numeric()
+q95<-numeric()
+for (i in age){
+med<-c(med,median(
+  par1$Rsmax*(1-exp(-par1$lambda*i))+par1$alpha0
+  ))
+q05<-c(q05,quantile(
+  par1$Rsmax*(1-exp(-par1$lambda*i))+par1$alpha0
+  , probs=0.005))
+q95<-c(q95,quantile(
+ par1$Rsmax*(1-exp(-par1$lambda*i))+par1$alpha0
+  , probs=0.995))
+}
+
+library(ggplot2)
+newdata1<- data.frame(age=age, med=med, q05=q05,
+                    q95= q95)
+ggplot() +
+  geom_ribbon(data=newdata1, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
+  geom_point(data=Tresult1, aes(x = age, y=D1))+
+  geom_line(data=newdata1, aes(x=age, y=med))+
+  geom_boxplot(data=data6, aes(x=200, y=D1), width=0.1)+  
+  scale_x_log10()+
+  labs(x="Age of Secondary Forest (yr)", y="Shannon Diversity") + theme(legend.position=" none")
+```
+
+
+
+# Effects of environmental variables on lambda observation
+
+## Selection de variable utile (critère AIC)
+
+```{r, parameters extraction (par), warning=FALSE,echo=FALSE}
+alpha0_max<-par$alpha0[par$lp__==max(par$lp__)]
+Rs_max <- par$Rsmax[par$lp__==max(par$lp__)]
+#Tresult1$age[is.na(Tresult1$age)] <- 200
+time <- Tresult1$age
+Rs <- Tresult1$D0
+```
+
+```{r, lambda obs calculus, warning=FALSE,echo=FALSE}
+lambdaobs <- -log(1-((Rs-alpha0_max)/Rs_max))/time 
+lambdaobs <- as.data.frame(lambdaobs)
+Tresult2 <- cbind(Tresult1, lambdaobs)
+Tresult2 <- Tresult2%>%na.omit(Tresult2)
+#Tresult2 <- Tresult2 %>% filter(!is.nan(lambdaobs))
+rmarkdown::paged_table(Tresult2)
+```
+
+Les parcelles qui ont une D0>100 possèdent des lambdaos NaN
+
+```{r, matrix AIC test, warning=FALSE,echo=FALSE}
+AIClambdaobs <- select(Tresult2, nbr_remanent, Proximiteforesti.re., Densiteforesti.re., Annedeculture, Typedesol, Topographie, Precedentcultural, lambdaobs)
+rmarkdown::paged_table(AIClambdaobs)
+```
+
+
+```{r modele depart, warning=FALSE,echo=FALSE}
+m0 <- lm(lambdaobs~1,data=AIClambdaobs)
+m0
+```
+
+
+```{r modele final, warning=FALSE,echo=FALSE}
+mf <- lm(lambdaobs~.,data=AIClambdaobs)
+mf
+```
+
+
+```{r meilleur modele, warning=FALSE,echo=FALSE}
+step(m0, scope=list(lower=m0, upper=mf),data=AIClambdaobs, direction="forward")
+```
+
+
+Les paramètres après à necessité significatives après l'AIC sont: 
+  Le nombre de remanent
+  La proximité forestière
+  Le type de sol
+ 
+  
+## Anova pour tester les variables les plus significatives
+
+```{r test anova pour variables significatives definitives}
+anova(lm(formula = lambdaobs ~ nbr_remanent + Proximiteforesti.re. + 
+    Typedesol, data = AIClambdaobs))
+```
+
+Finalement les variables significatives que nous integrerons dans notre modèles en plus du temps (âge de la parcelle) sont: 
+  - Le nombre d'arbre remanent
+  - La proximité forestière
+  
+```{r plot model lm, warning=FALSE,echo=FALSE}
+AIClm <- lm(formula = lambdaobs ~ nbr_remanent + Proximiteforesti.re., data = AIClambdaobs)
+
+plot(AIClm)
+```
+
+
+
+```{r,lambdaobs plotting according environmental variables,  warning=FALSE,echo=FALSE}
+par(mfrow=c(2,3))
+ggplot(AIClambdaobs, aes(x=nbr_remanent, y=lambdaobs)) + geom_point() + stat_smooth(method=loess)
+ggplot(AIClambdaobs, aes(x=Proximiteforesti.re., y=lambdaobs)) + geom_point() + stat_smooth(method=loess)
+```
+
+
+
+Adding covariants to the model
+
+# Number of remanent
+
+```{r recuperation de mu et sigma pour Rmax,  warning=FALSE,echo=FALSE}
+D0_mu <- Tresult1
+D0_mu <- slice(D0_mu, c(3,5,9,12,13,31,96))
+
+#Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
+#Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ", ]
+
+
+parD0_mu <- stan(file = "D0par.stan",
+               data=list(N=dim(D0_mu)[1],D0=D0_mu$D0),
+               pars=c("mu", "sigma"),
+               chains=3,
+               iter=2000,
+               warmup=1000)
+
+traceplot(parD0_mu, pars=c("mu", "sigma"), nrow=2)
+plot(parD0_mu, pars=c("mu", "sigma"))
+save(parD0_mu, file = "D0par.Rdata")
+```
+
+
+
+```{r recuperation de mu et sigma pour Rmax,  warning=FALSE,echo=FALSE}
+#pairs(parD0_mu, pars = c("mu", "sigma", "lp__"), las = 1)
+nrow=2
+library(bayesplot)
+library(shiny)
+library(rstanarm)
+library(ggplot2)
+
+mcmc_dens(parD0_mu, 
+        pars = c('mu', 'sigma'),
+        ISB = FALSE,
+        pdf = FALSE)
+```
+
+mu et sigma au maximum de vraissemblance valent respectivement 123.02 et 42.17 
+
+
+
+
+```{r add number of remanent (model.v1) to D0 plot, warning=FALSE,echo=FALSE}
+#Tresult1$Precedentcultural[is.na(Tresult1$Precedentcultural)] <-0
+Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
+Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ", ]
+
+
+modelv1 <- stan(file = "model.v1.stan",
+               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D0=Tresult1$D0, remanent=Tresult1$nbr_remanent),
+               pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0"),
+               chains=3,
+               iter=2000,
+               warmup=1000)
+
+traceplot(modelv1, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0"), nrow=2)
+plot(modelv1, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0"))
+save(modelv1, file = "model.v1.Rdata")
+```
+
+```{r stan real data of D0 PLOT (model.v1), warning=FALSE,echo=FALSE}
+parv1<-extract(modelv1)
+age<-1:200
+#nub_remanent<-1:200
+#mean_rem <- mean(Tresult1$nbr_remanent)
+#mean_rem <- rep(mean_rem, each=age)
+med<-numeric()
+q05<-numeric()
+q95<-numeric()
+for (i in age){
+    
+med<-c(med,median(
+  parv1$Rsmax*(1-exp(-(parv1$lambda + parv1$beta0)*i))+parv1$alpha0
+  ))
+q05<-c(q05,quantile(
+  parv1$Rsmax*(1-exp(-(parv1$lambda + parv1$beta0)*i))+parv1$alpha0
+  , probs=0.005))
+q95<-c(q95,quantile(
+  parv1$Rsmax*(1-exp(-(parv1$lambda + parv1$beta0)*i))+parv1$alpha0
+  , probs=0.995))
+    
+}
+
+library(ggplot2)
+newdatav1 <- data.frame(age=age, med=med, q05=q05,
+                    q95= q95)
+ggplot() +
+  geom_ribbon(data=newdatav1, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
+  geom_point(data=Tresult1, aes(x =age, y=D0))+
+  geom_line(data=newdatav1, aes(x=age, y=med))+
+  geom_boxplot(data=data5, aes(x=200, y=D0), width=0.1)+  
+  scale_x_log10()+ scale_y_continuous(limits=c(0, 200))+
+  labs(x="Age of Secondary Forest (yr)", y="Species Richness") + theme(legend.position=" none")
+```
+
+
+
+```{r, add number of remanent (model01) to D1 plot, warning=FALSE,echo=FALSE}
+Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
+Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ", ]
+
+
+model2d1 <- stan(file = "model01d1.stan",
+               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D1=Tresult1$D1, nbr_remanent=as.integer(factor(Tresult1$nbr_remanent))),
+               pars=c("lambda0", "alpha0", "Rsmax", "sigma", "lambda1"),
+               chains=3,
+               iter=2000,
+               warmup=1000)
+
+traceplot(model2d1, pars=c("lambda0", "alpha0", "Rsmax", "sigma", "lambda1"), nrow=2)
+plot(model2d1, pars=c("lambda0", "alpha0", "Rsmax", "sigma", "lambda1"))
+save(model2d1, file = "model01d1.Rdata")
+```
+
+
+```{r, stan real data of D1 PLOT (model01), warning=FALSE,echo=FALSE}
+par3<-extract(model2d1)
+age<-1:200
+#nub_remanent<-1:200
+med<-numeric()
+q05<-numeric()
+q95<-numeric()
+for (i in age){
+med<-c(med,median(
+  par3$Rsmax*(1-exp(-par3$lambda0*i)+par3$lambda1*i)+par3$alpha0
+  ))
+q05<-c(q05,quantile(
+  par3$Rsmax*(1-exp(-par3$lambda0*i)+par3$lambda1*i)+par3$alpha0
+  , probs=0.005))
+q95<-c(q95,quantile(
+  par3$Rsmax*(1-exp(-par3$lambda0*i)+par3$lambda1*i)+par3$alpha0
+  , probs=0.995))
+}
+
+library(ggplot2)
+newdata3<- data.frame(age=age, med=med, q05=q05,
+                    q95= q95)
+ggplot() +
+  geom_ribbon(data=newdata3, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
+  geom_point(data=Tresult1, aes(x = age, y=D1))+
+  geom_line(data=newdata3, aes(x=age, y=med))+
+  geom_boxplot(data=data6, aes(x=200, y=D1), width=0.1)+  
+  scale_x_log10()+
+  labs(x="Age of Secondary Forest (yr)", y="Shannon Diversity") + theme(legend.position=" none")
+```
+
+
+# Number of remanent and proximity
+
+```{r add number of remanent (model.v2) to D0 plot, warning=FALSE,echo=FALSE}}
+Tresult1$Proximiteforesti.re.[is.na(Tresult1$Proximiteforesti.re.)] <-0
+Tresult1 <- Tresult1 %>%mutate(proximity = Proximiteforesti.re. / 1000)
+Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
+Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ", ]
+
+
+modelv2 <- stan(file = "model.v2.stan",
+               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D0=Tresult1$D0, proximity=Tresult1$proximity),
+               pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0"),
+               chains=3,
+               iter=2000,
+               warmup=1000)
+
+traceplot(modelv2, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0"), nrow=2)
+plot(modelv2, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0"))
+save(modelv2, file = "model.v2.Rdata")
+```
+
+
+
+```{r stan real data of D0 PLOT (model.v2), warning=FALSE,echo=FALSE}
+parv2<-extract(modelv2)
+age<-1:200
+#nub_remanent<-1:200
+#mean_rem <- mean(Tresult1$nbr_remanent)
+#mean_rem <- rep(mean_rem, each=age)
+med<-numeric()
+q05<-numeric()
+q95<-numeric()
+for (i in age){
+    
+med<-c(med,median(
+  parv2$Rsmax*(1-exp(-(parv2$lambda + parv2$beta0)*i))+parv2$alpha0
+  ))
+q05<-c(q05,quantile(
+  parv2$Rsmax*(1-exp(-(parv2$lambda + parv2$beta0)*i))+parv2$alpha0
+  , probs=0.005))
+q95<-c(q95,quantile(
+  parv2$Rsmax*(1-exp(-(parv2$lambda + parv2$beta0)*i))+parv2$alpha0
+  , probs=0.995))
+    
+}
+
+library(ggplot2)
+newdatav2 <- data.frame(age=age, med=med, q05=q05,
+                    q95= q95)
+ggplot() +
+  geom_ribbon(data=newdatav2, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
+  geom_point(data=Tresult1, aes(x =age, y=D0))+
+  geom_line(data=newdatav2, aes(x=age, y=med))+
+  geom_boxplot(data=data5, aes(x=200, y=D0), width=0.1)+  
+  scale_x_log10()+ scale_y_continuous(limits=c(0, 200))+
+  labs(x="Age of Secondary Forest (yr)", y="Species Richness") + theme(legend.position=" none")
+```
+
+
+
+```{r  add number of remanent and proximity (model.v12) to D0 plot, warning=FALSE,echo=FALSE}
+Tresult1$Proximiteforesti.re.[is.na(Tresult1$Proximiteforesti.re.)] <-0
+Tresult1 <- Tresult1 %>%mutate(proximity = Proximiteforesti.re. / 1000)
+Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
+Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ", ]
+
+
+modelv12 <- stan(file = "model.v12.stan",
+               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D0=Tresult1$D0, proximity=Tresult1$proximity, remanent=Tresult1$nbr_remanent),
+               pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0", "beta1"),
+               chains=3,
+               iter=2000,
+               warmup=1000)
+
+traceplot(modelv12, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0", "beta1"), nrow=2)
+plot(modelv12, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0", "beta1"))
+save(modelv12, file = "model.v12.Rdata")
+```
+
+
+
+```{r, stan real data of D0 PLOT (modelv.12), warning=FALSE,echo=FALSE}
+parv12<-extract(modelv12)
+age<-1:200
+#nub_remanent<-1:200
+med<-numeric()
+q05<-numeric()
+q95<-numeric()
+for (i in age){
+
+med<-c(med,median(
+  parv12$Rsmax*(1-exp(-(parv12$lambda + parv12$beta0 + parv12$beta1)*i))+parv12$alpha0
+  ))
+q05<-c(q05,quantile(
+  parv12$Rsmax*(1-exp(-(parv12$lambda + parv12$beta0 + parv12$beta1)*i))+parv12$alpha0
+  , probs=0.005))
+q95<-c(q95,quantile(
+  parv12$Rsmax*(1-exp(-(parv12$lambda + parv12$beta0 + parv12$beta1)*i))+parv12$alpha0
+  , probs=0.995))
+
+}
+
+
+library(ggplot2)
+newdata12 <- data.frame(age=age, med=med, q05=q05,
+                    q95= q95)
+ggplot() +
+  geom_ribbon(data=newdata12, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
+  geom_point(data=Tresult1, aes(x =age, y=D0))+
+  geom_line(data=newdata12, aes(x=age, y=med))+
+  geom_boxplot(data=data5, aes(x=200, y=D0), width=0.1)+  
+  scale_x_log10()+ scale_y_continuous(limits=c(0, 200))+
+  labs(x="Age of Secondary Forest (yr)", y="Species Richness") + theme(legend.position=" none")
+```
+
+
+
+```{r add Type of soil (model.v3) to D0 plot, warning=FALSE,echo=FALSE}
+Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
+Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ", ]
+
+
+modelv3 <- stan(file = "model.v3.stan",
+               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D0=Tresult1$D0, sol=as.numeric(factor(Tresult1$Typedesol, levels = unique(Tresult1$Typedesol)))),
+               pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta", "sigma_sol"),
+               chains=3,
+               iter=2000,
+               warmup=1000)
+
+traceplot(modelv3, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta", "sigma_sol"), nrow=2)
+plot(modelv3, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta", "sigma_sol"))
+save(modelv3, file = "model.v3.Rdata")
+```
+
+
+
+
+
+
+```{r, add the proximity (model02) to D1 plot, warning=FALSE,echo=FALSE}
+Tresult1$Proximiteforesti.re.[is.na(Tresult1$Proximiteforesti.re.)] <-0
+Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
+Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ",]
+
+
+model3d1 <- stan(file = "model02d1.stan",
+               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D1=Tresult1$D1, nbr_remanent=as.integer(factor(Tresult1$nbr_remanent)),proximity=as.integer(factor(Tresult1$Proximiteforesti.re.))),
+               pars=c("lambda0", "alpha0", "Rsmax", "sigma", "lambda1"),
+               chains=3,
+               iter=2500,
+               warmup=1000)
+
+traceplot(model3d1, pars=c("lambda0", "alpha0", "Rsmax", "sigma", "lambda1"), nrow=2)
+plot(model3d1, pars=c("lambda0", "alpha0", "Rsmax", "sigma", "lambda1"))
+save(model3d1, file = "model02d1.Rdata")
+```
+
+
+```{r, stan real data of D1 PLOT (model02d1), warning=FALSE,echo=FALSE}
+par5<-extract(model3d1)
+age<-1:200
+#nub_remanent<-1:200
+med<-numeric()
+q05<-numeric()
+q95<-numeric()
+for (i in age){
+med<-c(med,median(
+  par5$Rsmax*(1-exp(-par5$lambda0*i)+par5$lambda1*i)+par5$alpha0
+  ))
+q05<-c(q05,quantile(
+  par5$Rsmax*(1-exp(-par5$lambda0*i)+par5$lambda1*i)+par5$alpha0
+  , probs=0.005))
+q95<-c(q95,quantile(
+  par5$Rsmax*(1-exp(-par5$lambda0*i)+par5$lambda1*i)+par5$alpha0
+  , probs=0.995))
+}
+
+library(ggplot2)
+newdata5<- data.frame(age=age, med=med, q05=q05,
+                    q95= q95)
+ggplot() +
+  geom_ribbon(data=newdata5, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
+  geom_point(data=Tresult1, aes(x = age, y=D1))+
+  geom_line(data=newdata5, aes(x=age, y=med))+
+  geom_boxplot(data=data6, aes(x=200, y=D1), width=0.1)+  
+  scale_x_log10()+
+  labs(x="Age of Secondary Forest (yr)", y="Shannon Diversity") + theme(legend.position=" none")
+```
+
+
+# Number of remanent, proximity and culture duration
+
+```{r, add culture duration crop (modelv3) to D1 plot, warning=FALSE,echo=FALSE}
+Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ",]
+Tresult1$Precedentcultural[is.na(Tresult1$Precedentcultural)] <-0
+#Tresult1 <- Tresult1[!is.na(Tresult1$Precedentcultural)]
+Tresult1$Annedeculture[is.na(Tresult1$Annedeculture)] <-0
+Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
+#Tresult1%>%drop_na(Tresult1)
+
+modelv3 <- stan(file = "modelv3.stan",
+               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D0=Tresult1$D0, nbr_remanent=as.integer(factor(Tresult1$nbr_remanent)),proximity=as.integer(factor(Tresult1$Proximiteforesti.re.)), dureecult=as.integer(factor(Tresult1$Annedeculture))),
+               pars=c("lambda0", "alpha0", "Rsmax", "sigma", "lambda1"),
+               chains=3,
+               iter=2500,
+               warmup=1000)
+
+traceplot(modelv3, pars=c("lambda0", "alpha0", "Rsmax", "sigma", "lambda1"), nrow=2)
+plot(modelv3, pars=c("lambda0", "alpha0", "Rsmax", "sigma", "lambda1"))
+save(modelv3, file = "modelv3.Rdata")
+```
+
+
+
+
+```{r stan real data of D0 PLOT (modelv3), warning=FALSE,echo=FALSE}
+par6<-extract(modelv3)
+age<-1:200
+#nub_remanent<-1:200
+med<-numeric()
+q05<-numeric()
+q95<-numeric()
+for (i in age){
+med<-c(med,median(
+  par5$Rsmax*(1-exp(-par6$lambda0*i)+par6$lambda1*i)+par6$alpha0
+  ))
+q05<-c(q05,quantile(
+  par5$Rsmax*(1-exp(-par6$lambda0*i)+par6$lambda1*i)+par6$alpha0
+  , probs=0.005))
+q95<-c(q95,quantile(
+  par5$Rsmax*(1-exp(-par6$lambda0*i)+par6$lambda1*i)+par6$alpha0
+  , probs=0.995))
+}
+
+library(ggplot2)
+newdata6<- data.frame(age=age, med=med, q05=q05,
+                    q95= q95)
+ggplot() +
+  geom_ribbon(data=newdata5, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
+  geom_point(data=Tresult1, aes(x = age, y=D1))+
+  geom_line(data=newdata6, aes(x=age, y=med))+
+  geom_boxplot(data=data5, aes(x=200, y=D1), width=0.1)+  
+  scale_x_log10()+
+  labs(x="Age of Secondary Forest (yr)", y="Species Richness") + theme(legend.position=" none")
+```
+
+## Data Computation
+### Calcul de la Diversité floristique: Entropie HCDT et nombre de Hill
+### Indice d'equitabilité de Piélou
+### Modelisation de la trajectoire de la diversité 
+### Ajout des variables environnementales dans le modèle (critère AIC)
+
+
+## Statistical Analyses
+### Anova ou Kruslall-wallis pour les tests non parametriques
+
+
+## Results
+### Comparaison des indices de diversité floristique entre les differentes categories de degradation,
+### Comparaison des indices de  diversité des forêts secondaires aux forêts naturelles
+### Taux de recupération de la diversité (D0) de la forêt secondaire (en se servant du maximum de vraissemblance, courbe de prediction)
+### Contrôle des variables environnementales sur le taux de récuperation de la diversité 
+
+
+
+Research of indicator species
+
+```{r matrix creation, warning=FALSE,echo=FALSE}
+Tindic <- data.env
+Tindic$age[is.na(Tindic$age)] <-200
+age10 <- Tindic %>% filter(age< 20) %>% select(plot)
+ageanc <- Tindic %>% filter(age== 200) %>% select(plot)
+indicmatrix1<-Ttree[Ttree$plot %in% c(age10$plot,ageanc$plot),]
+indicmatrix1 <- select(indicmatrix1, -nub_sp)
+```
+
+
+```{r indicator species, warning=FALSE,echo=FALSE}
+library(indicspecies)
+
+groups <- c((age10$plot), (ageanc$plot))
+groups <- c(rep(groups[1:51] <- 1, 51), (rep(groups[52:67] <- 2, 16)))
+indic <- dcast(indicmatrix1,  plot ~ speciesID, fun=sum, value.var = "plot")
+indic <- indic[,-1]
+indval = multipatt(indic, groups, control = how(nperm=999))
+summary(indval)                   #  Displaying the results
+```
+
+```{r indval extaction, warning=FALSE,echo=FALSE}
+indval$sign
+indval$sign$p.value
+indval$sign[indval$sign$p.value<0.050001,]
+indval$sign[indval$sign$p.value<0.050001 & is.na(indval$sign$p.value)==F,]
+rownames(indval$sign[indval$sign$p.value<0.050001 & is.na(indval$sign$p.value)==F,])
+```
+
+
+```{r extraction of plots which content indicator species,  warning=FALSE,echo=FALSE}
+spindic <- data.frame(indval$sign[indval$sign$p.value<0.050001 & is.na(indval$sign$p.value)==F,])
+spindic <- subset(spindic, select=-c(s.1, s.2, index))
+spindic<- rename(spindic, Indival=stat)
+spindic$speciesID = rownames(spindic)
+rownames(spindic)=NULL
+spindic <- spindic[, 3:1]
+spindic <- spindic%>%mutate(statut="SI")
+data.complet <- merge(data.tree, spindic, by = "speciesID", all.x = TRUE, all.y = TRUE)
+data.complet <- data.complet %>% filter(p.value >0.0001)
+data.complet
+```
+
+
+Diversity analysis of indicator species
+
+
+```{r Diversity calculus, warning=FALSE,echo=FALSE}
+
+# Create result table with the right format for the number of species------
+data.complet1 <- data.frame(plot = sort(unique(data.complet$plot), decreasing = FALSE),
+                     N = data.complet%>% arrange(plot) %>% group_by(plot) %>% summarise(N = n()) %>% pull,
+                     H0 = NA,
+                     H1 = NA,
+                     H2 = NA)
+
+plots <- sort(unique(data.complet$plot), decreasing = FALSE)
+
+for(p in plots){
+
+# isolate NS---------
+Ns_temp <- data.complet %>% 
+    filter(plot == p) %>% 
+    group_by(speciesID) %>% 
+    summarise(N = n()) %>% 
+    select(N) %>% 
+    pull %>% as.AbdVector()
+  
+# Calcule et replace--------
+  
+data.complet1$H0[which(data.complet1$plot == p)] <- Tsallis(Ns_temp, q=0)  # Richesse
+data.complet1$H1[which(data.complet1$plot == p)] <- Tsallis(Ns_temp, q=1)  # Shannon
+data.complet1$H2[which(data.complet1$plot == p)] <- Tsallis(Ns_temp, q=2)  # Simpson
+  
+}
+
+# Calculate number of Hill-----------
+
+data.complet1 <- mutate(data.complet1, D0=expq(H0, q=0), D1=expq(H1, q=1), D2=expq(H2, q=2))
+rmarkdown::paged_table(data.complet1)
+
+
+data.env2 <- data.env %>%      # Merge with environment variables
+  group_by(plot) %>% 
+  summarise(categorie, age, nbr_remanent, Proximiteforesti.re., Densiteforesti.re., Altitude, Annedeculture, Typedesol, Topographie, Precedentcultural, BA, AGB)
+
+data.complet2 <- merge(data.env2, data.complet1, by="plot")
+
+rmarkdown::paged_table(data.complet2)
+```
+
+
+Stan model Creation of specific richness (D0) of indicator species
+
+
+```{r stan real data of D0 of indicator species, warning=FALSE,echo=FALSE}
+data7 <- data.complet2[data.complet2$categorie == "foretanci ",]
+ggplot(data.complet2, aes(x=age, y=D0)) + geom_point() + stat_smooth(method=loess) +   scale_x_log10()+
+    geom_boxplot(data=data7, aes(x=200, y=D0), width=0.1)
+```
+
+
+
+```{r stan real data of D0 of indicator species2, warning=FALSE,echo=FALSE}
+
+library(rstan)
+data.complet2[data.complet2$categorie=="foretanci ",]$age<-200
+data.complet2<-data.complet2[!data.complet2$categorie == "foretexpl ", ]
+modelisp <- stan(file = "modelisp.stan",
+               data=list(N=dim(data.complet2)[1],age=data.complet2$age, D0=data.complet2$D0),
+              pars=c("lambda", "alpha0", "Rsmax", "sigma"),
+           chains=3,
+           iter=2000,
+           warmup=1000)
+
+traceplot(modelisp, pars=c("lambda", "alpha0", "Rsmax", "sigma"), nrow=2)
+plot(modelisp, pars=c("lambda", "alpha0", "Rsmax", "sigma"))
+save(modelisp, file = "modelisp.Rdata")
+```
+
+
+```{r stan real data of D0 of indicator species1, warning=FALSE,echo=FALSE}
+par10<-extract(modelisp)
+age<-1:200
+med<-numeric()
+q05<-numeric()
+q95<-numeric()
+for (i in age){
+med<-c(med,median(
+  par10$Rsmax*(1-exp(-par10$lambda*i))+par10$alpha0
+  ))
+q05<-c(q05,quantile(
+  par10$Rsmax*(1-exp(-par10$lambda*i))+par10$alpha0
+  , probs=0.005))
+q95<-c(q95,quantile(
+ par10$Rsmax*(1-exp(-par10$lambda*i))+par10$alpha0
+  , probs=0.995))
+}
+
+library(ggplot2)
+newdata3 <- data.frame(age=age, med=med, q05=q05,
+                    q95= q95)
+ggplot() +
+  geom_ribbon(data=newdata3, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
+  geom_point(data=data.complet2, aes(x = age, y=D0))+
+  geom_line(data=newdata3, aes(x=age, y=med))+
+  geom_boxplot(data=data7, aes(x=200, y=D0), width=0.1)+  
+  scale_x_log10()+
+  labs(x="Age of Secondary Forest (yr)", y="Indicator Species Richness") + theme(legend.position=" none")
+```
+
+
+<!-- #### Diversité d'ordre 1 (D1) -->
+
+<!-- ```{r, warning=FALSE,echo=FALSE} -->
+<!-- ggplot(Tresult1, aes(x=age, y=D1)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- La diversité d'ordre 1 augmente egalement avec l'âge de la parcelle. Mais cette diversité qui implique l'abondance dans les calculs en plus de la richesse est moins riche que la diversité d'ordre 0.  -->
+
+
+
+
+
+<!-- #### Diversité d'ordre 2 (D2) -->
+
+<!-- ```{r, warning=FALSE, echo=FALSE} -->
+<!-- ggplot(Tresult1, aes(x=age, y=D2))+ geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- La diversité d'ordre 2 (diversité d'abondance) accorde moins d'importance aux espèces rares. De ce fait, bien qu'elle augmente avec l'âge de la parcelle, sa richesse en espèce reste la plus faible. -->
+
+
+
+
+<!-- ### Influence du nombre d'arbre remanent par parcelle -->
+
+<!-- #### Diversité d'ordre 0 (D0) -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- tab <- na.omit(Tresult1) -->
+<!-- ggplot(tab, aes(x=nbr_remanent, y=D0)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- La litterature nous informe de l'influence du nombre de remanent sur la structure de la végetation [@NGuessan2019]. Mais pas forcement sur la richesse specifique. Notre graphe nous montre une legère baisse de la richesse  au fur et à mesure que le nombre de remanent augmente (jusqu'à 10).Peut-être aussi que nous apprecions mal du fait de manque de données supplementaires des parcelles ayant des remanents > 10, ou la connaissance de l'espèce remanente serait aussi necessaire. -->
+
+
+
+<!-- #### Diversité d'ordre 1 (D1) -->
+
+<!-- ```{r, warning=FALSE, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=nbr_remanent, y=D1)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- La courbe garde la même allure que celle de la diversité d'ordre 0 -->
+
+
+<!-- #### Diversité d'ordre 2 (D2) -->
+
+<!-- ```{r, warning=FALSE, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=nbr_remanent, y=D2)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- Bien vrai que nous observons une baisse de la diversité, mais la courbe se comporte de la même manière que les diversitéd'ordre 0 et 1 -->
+
+
+
+
+
+<!-- ### Influence de la distance avec la forêt ancienne ou exploitée -->
+
+<!-- #### Diversité d'ordre 0 (D0) -->
+
+<!-- ```{r, warning=FALSE, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Proximiteforesti.re., y=D0)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- La richesse specifique des parcelles augmente avec la reduction de la distance les separant des forêts. Plus les jachères sont proches des anciennes forêts, plus elles gagnent en richesse. -->
+
+
+<!-- #### Diversité d'ordre 1 (D1) -->
+
+<!-- ```{r, warning=FALSE, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Proximiteforesti.re., y=D1)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- La courbe garde la même allure que celle de la diversité d'ordre 0 -->
+
+
+<!-- #### Diversité d'ordre 2 (D2) -->
+
+<!-- ```{r, warning=FALSE, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Proximiteforesti.re., y=D2)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- Bien vrai que nous observons une baisse de la diversité, mais la courbe se comporte de la même manière que les diversitéd'ordre 0 et 1 -->
+
+
+<!-- ### influence du nombre d'année de la culture précedente -->
+
+<!-- #### Diversité d'ordre 0 (D0) -->
+
+<!-- ```{r, warning=FALSE, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Annedeculture, y=D0)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- La richesse specifique est importante sur les parcelles exploitées sur une periode <= 10 ans, au dela elle s'etablit difficilement. Pour confirmer notre assertion, il nous faudra plus de données entre 5 et 10 ans et aussi entre 10 ans et 30 ans. -->
+
+
+<!-- #### Diversité d'ordre 1 (D1) -->
+
+<!-- ```{r, warning=FALSE, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Annedeculture, y=D1)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- La courbe garde quasiment la même allure que celle de la diversité d'ordre 0 -->
+
+
+<!-- #### Diversité d'ordre 2 (D2) -->
+
+<!-- ```{r, warning=FALSE, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Annedeculture, y=D2)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- Bien vrai que nous observons une baisse de la diversité, mais la courbe se comporte de la même manière que les diversitéd'ordre 0 et 1 -->
+
+
+
+<!-- ### Influence du type de sol -->
+
+<!-- #### Diversité d'ordre 0 (D0) -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Typedesol, y=D0)) + geom_point() -->
+
+<!-- ``` -->
+
+<!-- L'accumulation des espèces est aussi importante sur les sols ferralitiques que hydomorphe, mais elle l'est encore plus sur les sols ferralitiques.  -->
+
+
+
+<!-- #### Diversité d'ordre 1 et 2 (D1 et D2) -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Typedesol, y=D1)) + geom_point() -->
+<!-- ggplot(tab, aes(x=Typedesol, y=D2)) + geom_point() -->
+<!-- ``` -->
+
+<!-- En prenant en compte l'abondance et la richesse (D1), et aussi en accordant plus de valeur aux espèces importantes (D2). Nous constatons des diversités qui tendent vers la similarité en espèce sur les sols ferralitiques et hydromorphes. Reste à prouver celà statistiquement. -->
+
+
+
+<!-- ### Influence de la topographie -->
+
+<!-- #### Diversité d'ordre 0 (D0) -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Topographie, y=D0)) + geom_point() -->
+<!-- ``` -->
+
+
+<!-- Exceptés les bas pente et mi-pente, quelque soit le terrain (bas fond, pente, plaine et plateau) dans notre etude, les espèces sont accumulées dans les jachères.Nous aurons besoin de plus de données sur les bas pente et mi-pente pour confirmer cette idée. -->
+
+
+<!-- #### Diversité d'ordre 1 (D1) -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Topographie, y=D1)) + geom_point() -->
+<!-- ``` -->
+
+<!-- Même resultat qu'au niveau de la D0 -->
+
+
+<!-- #### Diversité d'ordre 2 (D2) -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Topographie, y=D2)) + geom_point() -->
+<!-- ``` -->
+
+<!-- Même resultats qu'au niveau de la diversité d'ordre 0 et 1  -->
+
+
+<!-- ### Influence de l'aire basal -->
+
+<!-- #### Diversité d'ordre 0 (D0) -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=BA, y=D0)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- La richesse specifique augmente avec l'aire basal jusqu'à environ 45 m2, puis se stabilise. Les parcelles composées de gros arbres sont moins riches en espèce. -->
+
+
+
+<!-- #### Diversité d'ordre 1 (D1) -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=BA, y=D1)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- Cette courbe presente pratiquement la même allure que la D0 -->
+
+
+<!-- #### Diversité d'ordre 2 (D2) -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=BA, y=D2)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- La courbe de la diversité de dominance (D2) garde quasiment la même allure qu'au niveau des D0 et D1. Mais nous constatons une linearisation de celle-ci comparée aux autres. -->
+
+
+
+<!-- ### Influence du precedent cultural -->
+
+<!-- #### Diversité d'ordre 0 (D0) -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Precedentcultural, y=D0)) + geom_point() -->
+<!-- ``` -->
+
+<!-- La richesse est appreciable quelque soit la culture precedente, mais plus importante apres une cacaoculture. Nous signalons cependant que les parcelles après la cacaoculture sont plus vielles. Données à completer pour les cultures de maïs, igname, manioc et riz. -->
+
+
+<!-- #### Diversité d'ordre 1 (D1) -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Precedentcultural, y=D0)) + geom_point() -->
+<!-- ``` -->
+
+<!-- Même résultat qu'au niveau de la D0 -->
+
+
+<!-- #### Diversité d'ordre 2 (D2) -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Precedentcultural, y=D2)) + geom_point() -->
+<!-- ``` -->
+
+<!-- Même resultat qu'au niveau des D0 et D1 -->
+
+
+<!-- ### Influence de l'altitude -->
+
+<!-- #### Diversité d'ordre 0 (D0) -->
+
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Altitude, y=D0)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- D'après ce graphe, nous pensons que l'altitude n'impacte pas véritablement la richesse spécifique des forêts après surexploitation, car elle aussi importante à basse (75 m) qu'à haute (150 m) altitude. Aussi peut-être que les différence entre ces altitude n'est pas assez elévée. -->
+
+
+<!-- #### Diversité d'ordre 1 (D1) -->
+
+<!-- ```{r, warning=FALSE, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Altitude, y=D1)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- Même resultat qu'au niveau des= la D0  -->
+
+
+<!-- #### Diversité d'ordre 2 (D2) -->
+
+<!-- ```{r} -->
+<!-- ggplot(tab, aes(x=Altitude, y=D2)) + geom_point() + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- Même resultat qu'au niveau des D0 et D1 -->
+
+
+
+<!-- ### Influence des classe d'âge des jachère -->
+
+<!-- #### Diversité d'ordre 0 (D0) -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(Tresult1, aes(x=categorie, y=D0)) + geom_point() -->
+<!-- ``` -->
+
+<!-- L'accumulation des espèces evolue progressivment dans les jeunes jachères jusqu'à 30 ans. Au delà de cette tranche d'âge, la richesse des jachères s'apparente à celle des forêts exploitées, puis anciennes.  -->
+
+
+<!-- #### Diversité d'ordre 1 (D1) -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(Tresult1, aes(x=categorie, y=D1)) + geom_point() -->
+<!-- ``` -->
+
+<!-- Même resultat qu'au niveau de la D0 -->
+
+<!-- #### Diversité d'ordre 2 (D2) -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(Tresult1, aes(x=categorie, y=D2)) + geom_point() -->
+<!-- ``` -->
+
+<!-- Même resultat qu'au niveau des D0 et D1 -->
+
+
+<!-- ## Influence de l'effet combiné des variables sur la richesse specifique (D0) des communauté -->
+
+<!-- ### Influence du precedent cultural et et de la categorie d'age -->
+
+<!-- ```{r, warning=FALSE,echo=FALSE} -->
+<!-- ggplot(tab, aes(x=age, y=D0, colour=Precedentcultural)) + geom_point() + stat_smooth(method=loess) # + facet_wrap(~Precedentcultural) + stat_smooth(method=loess) -->
+<!-- ``` -->
+
+<!-- La richesse augmente avec l'âge sur les parcelles peu importe la culture preexistante. Au niveau du cacao, cette richesse après plus de 10 ans continue de croître. Peut être que cela serait aussi possible pour les autres cultures (manque de données de plus de 15 ans). -->
+
+
+
+<!-- ### Influence de la distance avec la forêt ancienne ou exploitée et l'âge -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=age, y=D0, size=Proximiteforesti.re.)) + geom_point() # + stat_smooth(method=loess) + facet_wrap(~Proximiteforesti.re.) -->
+<!-- ``` -->
+
+<!-- La richesse specifique augmente avec la dimunition de la distance separant les jachères aux anciennes forêts et l'âge de ces jachères. On pourrait dire qu'il existe une etroite relation entre l'attenuation de cette distance et l'âge des parcelles dans le processus d'accumiulation des espèces dans le temps.  -->
+
+
+
+<!-- ### Influence du nombre de remanent et  par classe d'âge des jachère -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, mapping = aes(x=nbr_remanent, y=D0))+ #, colour=categorie)) + -->
+<!--   geom_point()  + facet_wrap(~categorie) -->
+<!-- ``` -->
+
+<!-- La richesse specifique est plus importante au niveau des vielles jachères qui contiennent très peu de remanents par rapport aux autres categories d'âge. Dans notre etude, on pourrait dire à travers ce graphe que, le nombre d'arbre remanent diminue avec l'âge de la jachère inversement proportionnel à l'augmentation de la richesse specifique des parcelles. -->
+
+
+
+<!-- ### Influence de la distance avec la forêt ancienne ou exploitée et par categorie d'âge -->
+
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Proximiteforesti.re., y=D0, colour=categorie)) + -->
+<!--   geom_boxplot()  # + facet_wrap(~categorie) -->
+<!-- ``` -->
+
+<!-- Bien vrai que la richesse specifique des jachères augmente lorsqu'elles sont plus proches d'une ancienne forêt, mais il faudrait egalement un certain temps relativement important pour accumuler assez d'espèces. Sur le graphe, nous remarquons le fait que la categorie (J 11-20 ans) qui est à une distance plus petite comporte moins d'espèce que la categorie (J 21-30) plus distante mais plus vielle. -->
+
+
+
+<!-- #### Influence de la topographie et l'ages des parcelles -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=age, y=D0, colour=Topographie)) + geom_point() # + facet_wrap(~Topographie) -->
+<!-- ``` -->
+
+<!-- La richesse specifique augmente avec le temps sur toute les forme de terrain dans notre etude. Même si elle reste plus prononcée sur les pentes, les plaines, les plateaux, un peu aussi dans les bas-fonds. Assertion à confirmer avece plus de données au niveau des bas pente, mi-pente... -->
+
+
+
+<!-- #### Influence de l'aire basal et de l'age de la parcelle -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=BA, y=D0, size=age)) +stat_smooth(method = loess) + geom_point()  # + facet_wrap(~Typedesol) -->
+<!-- ``` -->
+
+<!-- La richesse specifique augmente en même temps avec l'âge de la parcelle et l'aire basal. Nous observons l'accumulation de la richesse dans le temps pour des valeurs d'air basal comprise entre 0.15 et 15 m2. Et au delà de cette aire, la richesse commence à se stabiliser quand bien même l'âge des parcelles continue d'evoluer. On pourrait dire que plus les jachères contiennent de gros arbres, moins elles sont riche en espèce.  -->
+
+
+
+<!-- #### Influence du type de sol et de l'age de la parcelle -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=age, y=D0, shape=Typedesol)) + scale_shape_manual(values=c(21, 24)) + geom_point()  # + facet_wrap(~Typedesol) -->
+<!-- ``` -->
+
+<!-- La richesse specifique evolue dans le temps aussi bien sur les sols ferralitiques que sur les sols hydromorphes comme l'indique nos resultats. Mais elle reste plus prononcée sur les sols ferralitiques avec un nombre d'espèce plus elevé sur les parcelles concernées. -->
+
+
+
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=age, y=D1, shape=Typedesol)) + scale_shape_manual(values=c(21, 24)) + geom_point() -->
+<!-- ggplot(tab, aes(x=age, y=D2, shape=Typedesol)) + scale_shape_manual(values=c(21, 24)) + geom_point() -->
+<!-- ``` -->
+
+<!-- Les richesses en diversité sur les sols ferralitique et hydromorphe deviennent presque les mêmes lorqu'on augmente l'ordre de la diversité (D1 et D2) -->
+
+
+
+<!-- ### Influence du type de sol et par categorie d'age -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, mapping = aes(x=categorie, y=D0, colour=Typedesol)) + geom_boxplot() # + facet_wrap(~Typedesol) -->
+<!-- ``` -->
+
+<!-- Plus les jachères viellies, plus elles s'enrichissent en espèce se rapprochant à celle des anciennes forêts. Cette accumulation d'espèce serait plus intense sur les sols ferralitiques que hydromorphes. -->
+
+
+
+<!-- #### Influence  de l'altitude et de l'age de la parcelle -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, aes(x=Altitude, y=D0, colour=age)) + geom_point() + stat_smooth(method=loess) # + facet_wrap(~Altitude) -->
+<!-- ``` -->
+
+<!-- Nous ne constatons pas veritablement d'effet de l'altitude sur la richesse specifique des jachères. Ce graphe nous indique plutôt une richesse qui evolue avec l'âge de la parcelle.  -->
+
+
+<!-- #### Influence de l'altitude et par categorie d'âge -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- ggplot(tab, mapping = aes(x=Altitude, y=D0, shape=categorie)) + geom_point() # + stat_smooth(method = loess)  + facet_wrap(~categorie) -->
+<!-- ``` -->
+
+<!-- Les points de toutes les categories s'etalent de part et d'autre de l'axe de l'altitude, ce qui signifie peut-être que la richesse ne depend pas forcement de l'altitude. Par contre on remarque des differents niveaux de richesse croissante de la plus jeune jachère (J 1-10 ans) à la la plus vielle (J 31-40 ans). -->
+
+
+
+<!-- # Ordination -->
+
+<!-- ## NMDS (Mise à l'échelle multidimensionnelle non métrique) -->
+
+<!-- ### Preparation des données -->
+
+<!-- ```{r, echo=FALSE, include=FALSE} -->
+<!-- Ttree1 <- data.tree %>% -->
+<!--   group_by(plot,genusCorr, speciesCorr) %>% -->
+<!--   summarise(N=n()) -->
+<!-- Ttree1 <- rename(Ttree1, nub_sp=N) -->
+<!-- Ttree1 -->
+<!-- Ttree2 <- mutate(Ttree1, genus_species=NA) -->
+<!-- Ttree2$genus_species <- paste(Ttree2$genusCorr, Ttree2$speciesCorr, sep="_") -->
+<!-- Ttree2$genus_species -->
+
+<!-- MetaComm <- dcast(Ttree2,  plot ~ genus_species, fun=sum, value.var = "plot") -->
+<!-- MetaComm <- MetaComm[,-1] -->
+<!-- row.names(MetaComm)<-sapply(c(1:105), function(i){paste0("Com",i)}) -->
+<!-- rmarkdown::paged_table(MetaComm) -->
+
+<!-- ``` -->
+
+
+<!-- ### Bray-Curtis distance  matrix -->
+
+<!-- ```{r, echo=FALSE, include=TRUE} -->
+
+<!-- MetaComm.nmds <- metaMDS(MetaComm, distance = "bray") -->
+<!-- MetaComm.nmds -->
+<!-- MetaComm.nmds$stress -->
+<!-- plot(MetaComm.nmds, type = "t", main = paste("NMDS/Bray - Stress =", round(MetaComm.nmds$stress, 3))) -->
+<!-- ``` -->
+
+
+
+<!-- ### Shapared plot and Goodness of fit -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- par(mfrow = c(1,2)) -->
+<!-- stressplot(MetaComm.nmds, main = "Shepard plot") -->
+<!-- gof = goodness(MetaComm.nmds) -->
+<!-- plot(MetaComm.nmds, type = "t", main = "Goodness of fit") -->
+<!-- points(MetaComm.nmds, display = "site", cex = gof*300) -->
+<!-- ``` -->
+
+
+
+<!-- ### NMDS avec ggplot -->
+
+<!-- ```{r, warning=FALSE, echo=FALSE} -->
+<!-- # Get the score (x and y coordinates) -->
+<!-- data.scores <- as.data.frame(scores(MetaComm.nmds)) -->
+<!-- data.scores$site <- rownames(data.scores) -->
+
+<!-- # Species scores -->
+<!-- species.scores <- as.data.frame(scores(MetaComm.nmds, "species")) -->
+<!-- species.scores$species <- rownames(species.scores) -->
+
+<!-- # Plot -->
+<!-- ggplot() +#geom_text(data=species.scores,aes(x=NMDS1,y=NMDS2,label=species),alpha=0.5) + # add the species labels -->
+<!--   geom_point(data=data.scores,aes(x=NMDS1,y=NMDS2),size=4) + # add the point markers -->
+<!--   geom_text(data=data.scores,aes(x=NMDS1,y=NMDS2,label=site),size=4,vjust=0) +  # add the site labels -->
+<!--   coord_equal() + theme_bw() -->
+
+<!-- # Add the environment variales -->
+
+<!-- NMDS.env <- cbind(data.scores, Tresult1) -->
+
+<!-- # Plot -->
+<!-- ggplot() + #geom_text(data=NMDS.env,aes(x=NMDS1,y=NMDS2,label=Typedesol),alpha=0.5) + # add the species labels -->
+<!--   geom_point(data=data.scores,aes(x=NMDS1,y=NMDS2),size=3) + # add the point markers -->
+<!--   geom_text(data=NMDS.env,aes(x=NMDS1,y=NMDS2,label=site, colour=categorie,size=4,vjust=0)) +  # add the site labels -->
+<!--   coord_equal() + theme_bw() -->
+
+
+
+<!-- ``` -->
+
+
+
+<!-- ## PCoA on a Bray-Curtis -->
+
+<!-- ```{r, warning=FALSE,echo=FALSE} -->
+<!-- MetaComm.bray <- vegdist(MetaComm) -->
+<!-- MetaComm.b.pcoa <- cmdscale(MetaComm.bray, k=(nrow(MetaComm)-1), eig = TRUE) -->
+<!-- ordiplot(scores(MetaComm.b.pcoa)[, c(1,2)], type = "t", main = "PCoA with species") -->
+<!-- abline(h=0, lty=3) -->
+<!-- abline(v=0, lty=3) -->
+
+<!-- # Add species -->
+<!-- MetaComm.wa <- wascores(MetaComm.b.pcoa$points[,1:2], MetaComm) -->
+<!-- text(MetaComm.wa, rownames(MetaComm.wa), cex = 0.7, col = "red") -->
+<!-- ``` -->
+
+
+<!-- # Classification ascendante hiérarchique (CAH) -->
+
+<!-- ```{r, warning=FALSE, echo=FALSE} -->
+<!-- #centrage réduction des données -->
+<!-- #pour éviter que variables à forte variance pèsent indûment sur les résultats -->
+<!-- MetaComm.cr <- scale(MetaComm,center=T,scale=T) -->
+<!-- #matrice des distances entre individus -->
+<!-- d.MetaComm <- dist(MetaComm.cr) -->
+<!-- #CAH - critère de Ward -->
+<!-- #method = « ward.D2 » correspond au vrai critère de Ward -->
+<!-- #utilisant le carré de la distance -->
+<!-- cah.ward <- hclust(d.MetaComm,method="ward.D2") -->
+<!-- #affichage dendrogramme -->
+<!-- plot(cah.ward) -->
+<!-- ``` -->
+
+
+
+<!-- # Classification ascendante hiérarchique -->
+
+<!-- ## Découpage en classes – Matérialisation des groupes -->
+
+<!-- ```{r, warning=FALSE, echo=FALSE} -->
+<!-- #MetaComm.tree <- hclust(dist(MetaComm)) -->
+<!-- #plot(hclust(dist(MetaComm))) #if I use plot(USA.tree) returns an error -->
+<!-- #x <- rect.hclust(MetaComm.tree, k=5, border="red") -->
+<!-- # x <- rect.hclust(USA.tree, h = 50, which = c(2,7), border = 3:4) -->
+<!-- #x -->
+
+<!-- hc <- hclust(dist(MetaComm), "ave") -->
+<!-- plot(hc) -->
+<!-- rect.hclust(hc, h = 50) -->
+<!-- cutree(hc, h = 50) -->
+<!-- ``` -->
+
+
+
+
+# References
