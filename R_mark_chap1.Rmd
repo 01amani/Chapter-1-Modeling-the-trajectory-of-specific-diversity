@@ -643,20 +643,20 @@ step(m0, scope=list(lower=m0, upper=mf),data=AIClambdaobs, direction="forward")
 ```
 
 
-Les paramètres après à necessité significatives après l'AIC sont: 
+Le tri pour la selection des variables à effet significatif par l'AIC sont: 
   Le nombre de remanent
   La proximité forestière
   Le type de sol
  
   
-## Anova pour tester les variables les plus significatives
+## Anova pour tester les variables hautement significatives
 
 ```{r test anova pour variables significatives definitives}
 anova(lm(formula = lambdaobs ~ nbr_remanent + Proximiteforesti.re. + 
     Typedesol, data = AIClambdaobs))
 ```
 
-Finalement les variables significatives que nous integrerons dans notre modèles en plus du temps (âge de la parcelle) sont: 
+Finalement les variables significatives que nous integrerons dans notre modèle en plus du temps (âge de la parcelle) sont: 
   - Le nombre d'arbre remanent
   - La proximité forestière
   
@@ -717,7 +717,6 @@ mcmc_dens(parD0_mu,
 ```
 
 mu et sigma au maximum de vraissemblance valent respectivement 123.02 et 42.17 
-
 
 
 
