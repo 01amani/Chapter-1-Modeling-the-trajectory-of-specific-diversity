@@ -450,7 +450,6 @@ ggplot(Divresult, aes(x=age, y=D0, colour=categorie)) + geom_point()+ scale_y_co
 
 
 ```{r Diversity order 0, warning=FALSE,echo=FALSE}
-library(ggplot2)
 library(nycflights13)
 data5<-Tresult1[Tresult1$categorie == "foretanci ",]
 ggplot(Tresult1, aes(x=age, y=D0)) + geom_point() + stat_smooth(method=loess) +   scale_x_log10()+
@@ -718,7 +717,7 @@ mcmc_dens(parD0_mu,
 
 mu et sigma au maximum de vraissemblance valent respectivement 123.02 et 42.17 
 
-
+### Number of remanent (model.v1)
 
 ```{r add number of remanent (model.v1) to D0 plot, warning=FALSE,echo=FALSE}
 #Tresult1$Precedentcultural[is.na(Tresult1$Precedentcultural)] <-0
@@ -825,9 +824,9 @@ ggplot() +
 ```
 
 
-# Number of remanent and proximity
+###  proximity (model.v2)
 
-```{r add number of remanent (model.v2) to D0 plot, warning=FALSE,echo=FALSE}}
+```{r add proximity (model.v2) to D0 plot, warning=FALSE,echo=FALSE}}
 Tresult1$Proximiteforesti.re.[is.na(Tresult1$Proximiteforesti.re.)] <-0
 Tresult1 <- Tresult1 %>%mutate(proximity = Proximiteforesti.re. / 1000)
 Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
@@ -884,6 +883,8 @@ ggplot() +
 ```
 
 
+
+### Number of remanent and proximity (model.v12)
 
 ```{r  add number of remanent and proximity (model.v12) to D0 plot, warning=FALSE,echo=FALSE}
 Tresult1$Proximiteforesti.re.[is.na(Tresult1$Proximiteforesti.re.)] <-0
@@ -942,106 +943,29 @@ ggplot() +
 
 
 
+### Type of soil (model.v3)
+
 ```{r add Type of soil (model.v3) to D0 plot, warning=FALSE,echo=FALSE}
 Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
 Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ", ]
-
+#Tresult1 <- rename(Tresult1, S=Typedesol)
+#Tresult1 <- mutate(Tresult1, S=(c(as.numeric(Tresult1$Typedesol))))
 
 modelv3 <- stan(file = "model.v3.stan",
-               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D0=Tresult1$D0, sol=as.numeric(factor(Tresult1$Typedesol, levels = unique(Tresult1$Typedesol)))),
-               pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta", "sigma_sol"),
+               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D0=Tresult1$D0, S=length(unique(Tresult1$S)), sol=as.numeric(factor(Tresult1$Typedesol, levels = unique(Tresult1$Typedesol)))),
+               pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta_sol"),
                chains=3,
                iter=2000,
                warmup=1000)
 
-traceplot(modelv3, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta", "sigma_sol"), nrow=2)
-plot(modelv3, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta", "sigma_sol"))
+traceplot(modelv3, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta_sol"), nrow=2)
+plot(modelv3, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta_sol"))
 save(modelv3, file = "model.v3.Rdata")
 ```
 
 
-
-
-
-
-```{r, add the proximity (model02) to D1 plot, warning=FALSE,echo=FALSE}
-Tresult1$Proximiteforesti.re.[is.na(Tresult1$Proximiteforesti.re.)] <-0
-Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
-Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ",]
-
-
-model3d1 <- stan(file = "model02d1.stan",
-               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D1=Tresult1$D1, nbr_remanent=as.integer(factor(Tresult1$nbr_remanent)),proximity=as.integer(factor(Tresult1$Proximiteforesti.re.))),
-               pars=c("lambda0", "alpha0", "Rsmax", "sigma", "lambda1"),
-               chains=3,
-               iter=2500,
-               warmup=1000)
-
-traceplot(model3d1, pars=c("lambda0", "alpha0", "Rsmax", "sigma", "lambda1"), nrow=2)
-plot(model3d1, pars=c("lambda0", "alpha0", "Rsmax", "sigma", "lambda1"))
-save(model3d1, file = "model02d1.Rdata")
-```
-
-
-```{r, stan real data of D1 PLOT (model02d1), warning=FALSE,echo=FALSE}
-par5<-extract(model3d1)
-age<-1:200
-#nub_remanent<-1:200
-med<-numeric()
-q05<-numeric()
-q95<-numeric()
-for (i in age){
-med<-c(med,median(
-  par5$Rsmax*(1-exp(-par5$lambda0*i)+par5$lambda1*i)+par5$alpha0
-  ))
-q05<-c(q05,quantile(
-  par5$Rsmax*(1-exp(-par5$lambda0*i)+par5$lambda1*i)+par5$alpha0
-  , probs=0.005))
-q95<-c(q95,quantile(
-  par5$Rsmax*(1-exp(-par5$lambda0*i)+par5$lambda1*i)+par5$alpha0
-  , probs=0.995))
-}
-
-library(ggplot2)
-newdata5<- data.frame(age=age, med=med, q05=q05,
-                    q95= q95)
-ggplot() +
-  geom_ribbon(data=newdata5, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
-  geom_point(data=Tresult1, aes(x = age, y=D1))+
-  geom_line(data=newdata5, aes(x=age, y=med))+
-  geom_boxplot(data=data6, aes(x=200, y=D1), width=0.1)+  
-  scale_x_log10()+
-  labs(x="Age of Secondary Forest (yr)", y="Shannon Diversity") + theme(legend.position=" none")
-```
-
-
-# Number of remanent, proximity and culture duration
-
-```{r, add culture duration crop (modelv3) to D1 plot, warning=FALSE,echo=FALSE}
-Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ",]
-Tresult1$Precedentcultural[is.na(Tresult1$Precedentcultural)] <-0
-#Tresult1 <- Tresult1[!is.na(Tresult1$Precedentcultural)]
-Tresult1$Annedeculture[is.na(Tresult1$Annedeculture)] <-0
-Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
-#Tresult1%>%drop_na(Tresult1)
-
-modelv3 <- stan(file = "modelv3.stan",
-               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D0=Tresult1$D0, nbr_remanent=as.integer(factor(Tresult1$nbr_remanent)),proximity=as.integer(factor(Tresult1$Proximiteforesti.re.)), dureecult=as.integer(factor(Tresult1$Annedeculture))),
-               pars=c("lambda0", "alpha0", "Rsmax", "sigma", "lambda1"),
-               chains=3,
-               iter=2500,
-               warmup=1000)
-
-traceplot(modelv3, pars=c("lambda0", "alpha0", "Rsmax", "sigma", "lambda1"), nrow=2)
-plot(modelv3, pars=c("lambda0", "alpha0", "Rsmax", "sigma", "lambda1"))
-save(modelv3, file = "modelv3.Rdata")
-```
-
-
-
-
 ```{r stan real data of D0 PLOT (modelv3), warning=FALSE,echo=FALSE}
-par6<-extract(modelv3)
+parv3<-extract(modelv3)
 age<-1:200
 #nub_remanent<-1:200
 med<-numeric()
@@ -1049,27 +973,216 @@ q05<-numeric()
 q95<-numeric()
 for (i in age){
 med<-c(med,median(
-  par5$Rsmax*(1-exp(-par6$lambda0*i)+par6$lambda1*i)+par6$alpha0
+  parv3$Rsmax*(1-exp(-(parv3$lambda + (parv3$beta_sol[i]))*i))+parv3$alpha0
   ))
 q05<-c(q05,quantile(
-  par5$Rsmax*(1-exp(-par6$lambda0*i)+par6$lambda1*i)+par6$alpha0
+  parv3$Rsmax*(1-exp(-(parv3$lambda + (parv3$beta_sol[i]))*i))+parv3$alpha0
   , probs=0.005))
 q95<-c(q95,quantile(
-  par5$Rsmax*(1-exp(-par6$lambda0*i)+par6$lambda1*i)+par6$alpha0
+  parv3$Rsmax*(1-exp(-(parv3$lambda + (parv3$beta_sol[i]))*i))+parv3$alpha0
   , probs=0.995))
 }
 
 library(ggplot2)
-newdata6<- data.frame(age=age, med=med, q05=q05,
+newdatav3<- data.frame(age=age, med=med, q05=q05,
                     q95= q95)
 ggplot() +
-  geom_ribbon(data=newdata5, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
-  geom_point(data=Tresult1, aes(x = age, y=D1))+
-  geom_line(data=newdata6, aes(x=age, y=med))+
-  geom_boxplot(data=data5, aes(x=200, y=D1), width=0.1)+  
-  scale_x_log10()+
+  geom_ribbon(data=newdatav3, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
+  geom_point(data=Tresult1, aes(x = age, y=D0))+
+  geom_line(data=newdatav3, aes(x=age, y=med))+
+  geom_boxplot(data=data5, aes(x=200, y=D0), width=0.1)+  
+  scale_x_log10()+ scale_y_continuous(limits=c(0, 200))+
   labs(x="Age of Secondary Forest (yr)", y="Species Richness") + theme(legend.position=" none")
 ```
+
+
+### Number of remanent and Type of soil (model.v13)
+
+
+```{r add number of remanent and type of soil (model.v13) to D0 plot, warning=FALSE,echo=FALSE}
+#Tresult1$nbr_remanent[is.na(Tresult1$nbr_remanent)] <-0
+Tresult1$Proximiteforesti.re.[is.na(Tresult1$Proximiteforesti.re.)] <-0
+Tresult1 <- Tresult1 %>%mutate(proximity = Proximiteforesti.re. / 1000)
+Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
+Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ", ]
+
+
+modelv13 <- stan(file = "model.v13.stan",
+               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D0=Tresult1$D0, remanent=Tresult1$nbr_remanent, S=length(unique(Tresult1$S)), sol=as.numeric(factor(Tresult1$Typedesol, levels = unique(Tresult1$Typedesol)))),
+               pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0", "beta_sol"),
+               chains=3,
+               iter=2000,
+               warmup=1000)
+
+traceplot(modelv13, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0", "beta_sol"), nrow=2)
+plot(modelv13, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0", "beta_sol"))
+save(modelv13, file = "model.v13.Rdata")
+```
+
+
+```{r stan real data of D0 PLOT (modelv.13), warning=FALSE,echo=FALSE}
+parv13<-extract(modelv13)
+age<-1:200
+#nub_remanent<-1:200
+med<-numeric()
+q05<-numeric()
+q95<-numeric()
+for (i in age){
+
+med<-c(med,median(
+  parv13$Rsmax*(1-exp(-(parv13$lambda + parv13$beta0 + (parv13$beta_sol[i]))*i))+parv13$alpha0
+  ))
+q05<-c(q05,quantile(
+  parv13$Rsmax*(1-exp(-(parv13$lambda + parv13$beta0 + (parv13$beta_sol[i]))*i))+parv13$alpha0
+  , probs=0.005))
+q95<-c(q95,quantile(
+  parv13$Rsmax*(1-exp(-(parv13$lambda + parv13$beta0 + (parv13$beta_sol[i]))*i))+parv13$alpha0
+  , probs=0.995))
+
+}
+
+
+library(ggplot2)
+newdata13 <- data.frame(age=age, med=med, q05=q05,
+                    q95= q95)
+ggplot() +
+  geom_ribbon(data=newdata13, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
+  geom_point(data=Tresult1, aes(x =age, y=D0))+
+  geom_line(data=newdata13, aes(x=age, y=med))+
+  geom_boxplot(data=data5, aes(x=200, y=D0), width=0.1)+  
+  scale_x_log10()+ scale_y_continuous(limits=c(0, 200))+
+  labs(x="Age of Secondary Forest (yr)", y="Species Richness") + theme(legend.position=" none")
+```
+
+
+### Proximity and Type of soil (model.v23)
+
+
+```{r}
+#Tresult1$nbr_remanent[is.na(Tresult1$nbr_remanent)] <-0
+Tresult1$Proximiteforesti.re.[is.na(Tresult1$Proximiteforesti.re.)] <-0
+Tresult1 <- Tresult1 %>%mutate(proximity = Proximiteforesti.re. / 1000)
+Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
+Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ", ]
+
+
+modelv23 <- stan(file = "model.v23.stan",
+               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D0=Tresult1$D0, proximity=Tresult1$proximity, S=length(unique(Tresult1$S)), sol=as.numeric(factor(Tresult1$Typedesol, levels = unique(Tresult1$Typedesol)))),
+               pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0", "beta_sol"),
+               chains=3,
+               iter=2000,
+               warmup=1000)
+
+traceplot(modelv23, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0", "beta_sol"), nrow=2)
+plot(modelv23, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0", "beta_sol"))
+save(modelv23, file = "model.v23.Rdata")
+```
+
+
+```{r stan real data of D0 PLOT (modelv.23), warning=FALSE,echo=FALSE}
+parv23<-extract(modelv23)
+age<-1:200
+#nub_remanent<-1:200
+med<-numeric()
+q05<-numeric()
+q95<-numeric()
+for (i in age){
+
+med<-c(med,median(
+  parv23$Rsmax*(1-exp(-(parv23$lambda + parv23$beta0 + (parv23$beta_sol[i]))*i))+parv23$alpha0
+  ))
+q05<-c(q05,quantile(
+  parv23$Rsmax*(1-exp(-(parv23$lambda + parv23$beta0 + (parv23$beta_sol[i]))*i))+parv23$alpha0
+  , probs=0.005))
+q95<-c(q95,quantile(
+  parv23$Rsmax*(1-exp(-(parv23$lambda + parv23$beta0 + (parv23$beta_sol[i]))*i))+parv23$alpha0
+  , probs=0.995))
+
+}
+
+
+library(ggplot2)
+newdata23 <- data.frame(age=age, med=med, q05=q05,
+                    q95= q95)
+ggplot() +
+  geom_ribbon(data=newdata23, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
+  geom_point(data=Tresult1, aes(x =age, y=D0))+
+  geom_line(data=newdata23, aes(x=age, y=med))+
+  geom_boxplot(data=data5, aes(x=200, y=D0), width=0.1)+  
+  scale_x_log10()+ scale_y_continuous(limits=c(0, 200))+
+  labs(x="Age of Secondary Forest (yr)", y="Species Richness") + theme(legend.position=" none")
+```
+
+
+### Number of remanent, proximity and Type of soil (model.v123)
+
+
+```{r add Number of remanent, proximity and Type of soil (model.v123) to D0  plot,warning=FALSE,echo=FALSE}
+#Tresult1$nbr_remanent[is.na(Tresult1$nbr_remanent)] <-0
+Tresult1$Proximiteforesti.re.[is.na(Tresult1$Proximiteforesti.re.)] <-0
+Tresult1 <- Tresult1 %>%mutate(proximity = Proximiteforesti.re. / 1000)
+Tresult1[Tresult1$categorie=="foretanci ",]$age<-200
+Tresult1<-Tresult1[!Tresult1$categorie == "foretexpl ", ]
+
+
+modelv123 <- stan(file = "model.v123.stan",
+               data=list(N=dim(Tresult1)[1],age=Tresult1$age, D0=Tresult1$D0,remanent=Tresult1$nbr_remanent, proximity=Tresult1$proximity, S=length(unique(Tresult1$S)), sol=as.numeric(factor(Tresult1$Typedesol, levels = unique(Tresult1$Typedesol)))),
+               pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0","beta1", "beta2_sol"),
+               chains=3,
+               iter=2000,
+               warmup=1000)
+
+traceplot(modelv123, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0","beta1", "beta2_sol"), nrow=2)
+plot(modelv123, pars=c("lambda", "alpha0", "Rsmax", "sigma", "beta0","beta1", "beta2_sol"))
+save(modelv123, file = "model.v123.Rdata")
+```
+
+
+```{r stan real data of D0 PLOT (modelv.123), warning=FALSE,echo=FALSE}
+parv123<-extract(modelv123)
+age<-1:200
+#nub_remanent<-1:200
+med<-numeric()
+q05<-numeric()
+q95<-numeric()
+for (i in age){
+
+med<-c(med,median(
+  parv123$Rsmax*(1-exp(-(parv123$lambda + parv123$beta0 + parv123$beta1 + (parv123$beta2_sol[i]))*i))+parv123$alpha0
+  ))
+q05<-c(q05,quantile(
+  parv123$Rsmax*(1-exp(-(parv123$lambda + parv123$beta0 + parv123$beta1 + (parv123$beta2_sol[i]))*i))+parv123$alpha0
+  , probs=0.005))
+q95<-c(q95,quantile(
+  parv123$Rsmax*(1-exp(-(parv123$lambda + parv123$beta0 + parv123$beta1 + (parv123$beta2_sol[i]))*i))+parv123$alpha0
+  , probs=0.995))
+
+}
+
+
+library(ggplot2)
+newdata123 <- data.frame(age=age, med=med, q05=q05,
+                    q95= q95)
+ggplot() +
+  geom_ribbon(data=newdata123, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
+  geom_point(data=Tresult1, aes(x =age, y=D0))+
+  geom_line(data=newdata123, aes(x=age, y=med))+
+  geom_boxplot(data=data5, aes(x=200, y=D0), width=0.1)+  
+  scale_x_log10()+ scale_y_continuous(limits=c(0, 200))+
+  labs(x="Age of Secondary Forest (yr)", y="Species Richness") + theme(legend.position=" none")
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Data Computation
 ### Calcul de la Diversité floristique: Entropie HCDT et nombre de Hill
