@@ -905,33 +905,40 @@ save(modelv3, file = "model.v3.Rdata")
 
 ```{r stan real data of D0 PLOT (modelv3), warning=FALSE,echo=FALSE}
 parv3<-extract(modelv3)
-age<-1:200
+age<-numeric()
+# age <- rep(1:200, each=2)
 #Typedesol <- ((rep(c(Tresult1$S:200))))
 med<-numeric()
 q05<-numeric()
 q95<-numeric()
-for (i in age){
-med<-c(med,median(
-  parv3$Rsmax*(1-exp(-(parv3$lambda + (parv3$beta_sol[i]))*i))+parv3$alpha0
-  ))
-q05<-c(q05,quantile(
-  parv3$Rsmax*(1-exp(-(parv3$lambda + (parv3$beta_sol[i]))*i))+parv3$alpha0
-  , probs=0.005))
-q95<-c(q95,quantile(
-  parv3$Rsmax*(1-exp(-(parv3$lambda + (parv3$beta_sol[i]))*i))+parv3$alpha0
-  , probs=0.995))
+sol<-numeric()
+# sol  <- rep(1:2, 200)
+for (i in 1:200){
+  for (s in 1:2){
+    age <- c(age, i)
+    med<-c(med,median(
+      parv3$Rsmax*(1-exp(-(parv3$lambda + (parv3$beta_sol[,s]))*i))+parv3$alpha0
+    ))
+    q05<-c(q05,quantile(
+      parv3$Rsmax*(1-exp(-(parv3$lambda + (parv3$beta_sol[,s]))*i))+parv3$alpha0
+      , probs=0.005))
+    q95<-c(q95,quantile(
+      parv3$Rsmax*(1-exp(-(parv3$lambda + (parv3$beta_sol[,s]))*i))+parv3$alpha0
+      , probs=0.995))
+    sol <- c(sol, s)
+  }
 }
-
-library(ggplot2)
 newdatav3<- data.frame(age=age, med=med, q05=q05,
-                    q95= q95)
+                    q95= q95, sol = as.factor(sol))
+library(ggplot2)
 ggplot() +
-  geom_ribbon(data=newdatav3, aes(x=age, ymin = q05, ymax = q95), alpha = .25)+
+  geom_ribbon(data=newdatav3, aes(x=age, ymin = q05, ymax = q95, fill=sol), alpha = .25)+
   geom_point(data=Tresult1, aes(x = age, y=D0))+
-  geom_line(data=newdatav3, aes(x=age, y=med))+ 
+  geom_line(data=newdatav3, aes(x=age, y=med, col=sol))+ 
   geom_boxplot(data=data5, aes(x=200, y=D0), width=0.1)+  
   scale_x_log10()+ scale_y_continuous(limits=c(0, 200))+
-  labs(x="Age of Secondary Forest (yr)", y="Species Richness") + theme(legend.position=" none")
+  labs(x="Age of Secondary Forest (yr)", y="Species Richness")
+  # theme(legend.position=" none")
 ```
 
 
